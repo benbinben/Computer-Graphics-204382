@@ -24,8 +24,7 @@ def open_file():
         select.pack(side = BOTTOM , pady=10)
         # kick off the GUI
         root.mainloop()
-        
-        
+               
 def select_image():
         global path
         print("You choose select image from your computer")
@@ -76,8 +75,7 @@ def mouse_crop(event, x, y, flags, param):
             roi = oriImage[refPoint[0][1]:refPoint[1][1], refPoint[0][0]:refPoint[1][0]]
             cv2.imwrite('Crop.png', roi)
             cv2.imshow("Cropped", roi)
- 
-
+            
 # main
 open_file()
 
@@ -98,7 +96,6 @@ while True:
         if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         
- 
     elif cropping:
         cv2.rectangle(i, (x_start, y_start), (x_end, y_end), (255, 0, 0), 2)
         cv2.imshow("Show image", i)
