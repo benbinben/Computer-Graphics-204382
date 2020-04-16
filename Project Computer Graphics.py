@@ -87,15 +87,12 @@ cv2.namedWindow("Show image")
 cv2.setMouseCallback("Show image", mouse_crop)
  
 while True:
- 
     i = image.copy()
- 
     if not cropping:
         cv2.imshow("Show image", image)
         # press key 'q' if close
         if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-        
     elif cropping:
         cv2.rectangle(i, (x_start, y_start), (x_end, y_end), (255, 0, 0), 2)
         cv2.imshow("Show image", i)
@@ -113,3 +110,83 @@ cv2.destroyAllWindows()
 Crop = cv2.imread('Crop.png')
 cv2.imshow("Crop show", Crop)
 
+
+####################### increase gamma
+# from __future__ import print_function
+import numpy as np
+# import argparse
+import cv2
+def adjust_gamma(image, gamma=1.0):
+	invGamma = 1.0 / gamma
+	table = np.array([((i / 255.0) ** invGamma) * 255
+		for i in np.arange(0, 256)]).astype("uint8")
+	return cv2.LUT(image, table)
+
+class myImage:
+	def __init__(self, img_name):
+		self.img=cv2.imread(img_name)
+		self.__name=img_name
+	def __str__(self):
+		return self.__name
+	#example 
+	# x = MyImage('1.jpg')
+	# str(x) => 1.jpg
+	# x.img  => numpy array store img
+
+x = myImage("Crop.png")
+if x.img.mean()>127:
+    save=0.0
+    filename="Crop.png"
+else:
+    save=1.5
+# print(x.img.shape)
+# cv2.imshow(" ",x.img)
+if x.img.shape[1]>450:
+    scale_percent=int((450*100)/x.img.shape[1])# percent of original size if width>450 make to 450 & cal %
+else:
+    scale_percent=100
+width = int(x.img.shape[1] * scale_percent / 100)
+height = int(x.img.shape[0] * scale_percent / 100)
+dim = (width, height)
+# resize image
+resized = cv2.resize(x.img, dim, interpolation = cv2.INTER_AREA)
+# cv2.imshow("Resized image", resized)
+# cv2.waitKey(0)
+
+original = resized
+for gamma in np.arange(0.0, 2.0, 0.5):
+	if gamma == 1:
+		continue
+	gamma = gamma if gamma > 0 else 0.1
+	adjusted = adjust_gamma(original, gamma=gamma)
+	cv2.putText(adjusted, "g={}".format(gamma), (10, 30),
+		cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 3)
+	# cv2.imshow("Images", np.hstack([original, adjusted]))
+	# filename=str(gamma)+"_"+str(x)
+	if(gamma==save):
+		cv2.imwrite(filename,adjusted)
+	# cv2.waitKey(0)
+
+################## Classify
+from keras.models import load_model
+import matplotlib.pyplot as plt
+from skimage.transform import resize
+import numpy as np
+# print(filename)
+model = load_model('my_model.h5')
+my_image = plt.imread(filename)# read file
+
+my_image_resize = resize(my_image, (32,32,3))#resize
+probabilities = model.predict(np.array([my_image_resize,] ) )
+
+probabilities
+
+number_to_class = ['airplan', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'hourse', 'ship', 'truck']
+index = np.argsort(probabilities[0,:])
+print('Most likly class:',number_to_class[index[9]], '--probability:', probabilities[0, index[9]])
+print('Second likly class:',number_to_class[index[8]], '--probability:', probabilities[0, index[8]])
+print('Third likly class:',number_to_class[index[7]], '--probability:', probabilities[0, index[7]])
+print('Fourth likly class:',number_to_class[index[6]], '--probability:', probabilities[0, index[6]])
+print('Fifth likly class:',number_to_class[index[5]], '--probability:', probabilities[0, index[5]])
+#save the model
+# model.save('my_model.h5')
